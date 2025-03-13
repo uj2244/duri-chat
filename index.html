@@ -10,25 +10,61 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             height: 100vh;
             background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
         }
-        .chat-container {
-            width: 80vw;
-            height: 80vh;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            position: relative;
+        
+        /* 탭 스타일 */
+        .tabs {
+            display: flex;
+            background-color: #f0f0f0;
+            padding: 10px 10px 0 10px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: white;
+            font-weight: bold;
+        }
+        
+        /* 컨테이너 스타일 */
+        .container {
             display: flex;
             flex-direction: column;
-            transition: background 0.3s, color 0.3s;
+            flex: 1;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            margin: 0 10px 10px 10px;
+            overflow: hidden;
         }
+        
+        /* 채팅 스타일 */
+        .chat-container {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .chat-container.active {
+            display: flex;
+        }
+        
         .chat-box {
             flex: 1;
             overflow-y: auto;
@@ -37,21 +73,25 @@
             padding: 10px;
             position: relative;
         }
+        
         .input-box {
             display: flex;
             align-items: center;
             flex-wrap: wrap; /* 파일 입력이 길어질 경우 줄바꿈 허용 */
         }
+        
         input[type="text"] {
             flex: 1;
             padding: 8px;
             margin-right: 5px;
         }
+        
         input[type="color"] {
             width: 50px;
             padding: 0;
             margin-right: 5px;
         }
+        
         button {
             padding: 8px;
             background: #007BFF;
@@ -60,80 +100,255 @@
             cursor: pointer;
             margin-left: 5px;
         }
+        
         .message {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
             justify-content: space-between;
         }
+        
         .message img, .message audio {
             max-width: 200px;
             max-height: 200px;
             margin-right: 10px;
         }
+        
         .message-text {
             flex: 1;
         }
+        
         .button-container {
             display: flex;
             gap: 5px;
         }
+        
         .attachment {
             margin-left: 10px;
             color: #007BFF;
             text-decoration: underline;
             cursor: pointer;
         }
+        
+        /* 공지사항 스타일 */
+        .notice-container {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .notice-container.active {
+            display: flex;
+        }
+        
+        .notice-list {
+            flex: 1;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .notice-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        
+        .notice-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .notice-title {
+            font-weight: bold;
+        }
+        
+        .notice-date {
+            font-size: 0.8em;
+            color: #888;
+        }
+        
+        .notice-content {
+            display: none;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-top: 5px;
+            border-radius: 5px;
+        }
+        
+        .notice-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .notice-form {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .notice-form input, .notice-form textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .notice-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* 공지사항 첨부파일 스타일 */
+        .notice-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .notice-attachment {
+            max-width: 200px;
+            max-height: 200px;
+            margin-right: 10px;
+        }
+        
+        .notice-attachment-link {
+            color: #007BFF;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
         /* 다크 모드 스타일 */
         .dark-mode {
             background-color: #333;
             color: white;
         }
-        .dark-mode .chat-container {
+        
+        .dark-mode .container {
             background: #444;
             border: 1px solid #555;
         }
+        
         .dark-mode .chat-box {
             border-bottom: 1px solid #666;
         }
+        
         .dark-mode button {
             background: #555;
             color: white;
         }
+        
         .dark-mode .attachment {
             color: #66b0ff;
+        }
+        
+        .dark-mode .tab {
+            background-color: #555;
+            color: white;
+            border-color: #666;
+        }
+        
+        .dark-mode .tab.active {
+            background-color: #444;
+            font-weight: bold;
+        }
+        
+        .dark-mode .notice-item {
+            border-bottom-color: #555;
+        }
+        
+        .dark-mode .notice-item:hover {
+            background-color: #555;
+        }
+        
+        .dark-mode .notice-content {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-box" id="chatBox"></div>
-        <div class="input-box">
-            <input type="text" id="messageInput" placeholder="낙서를 남겨보세요!">
-            <input type="color" id="fontColor" value="#000000">
-            <select id="fontSelect">
-                <option value="Arial">Arial</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Comic Sans MS">Comic Sans MS</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Nanum Pen Script">나눔손글씨</option>
-                <option value="BM DOHYEON">배달의민족 도현</option>
-                <option value="BM JUA">배달의민족 주아</option>
-                <option value="BM HANNA 11yrs">배달의민족 한나체</option>
-                <option value="Cafe24 Surround">카페24 써라운드</option>
-            </select>
-            <input type="number" id="fontSize" placeholder="크기" min="12" max="48" value="16">
-            <button onclick="startRecording()">녹음 시작</button>
-            <button onclick="stopRecording()" id="stopButton" disabled>녹음 중지</button>
-            <button onclick="sendMessage()">전송</button>
-            <button class="mode-toggle" onclick="toggleMode()">다크 모드</button>
-            <!-- 파일 업로드 추가 -->
-            <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="margin-left: 5px;">
+    <!-- 탭 메뉴 -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('chat')">채팅</div>
+        <div class="tab" onclick="switchTab('notice')">공지사항</div>
+        <button class="mode-toggle" onclick="toggleMode()">다크 모드</button>
+    </div>
+    
+    <div class="container">
+        <!-- 채팅 컨테이너 -->
+        <div class="chat-container active" id="chatContainer">
+            <div class="chat-box" id="chatBox"></div>
+            <div class="input-box">
+                <input type="text" id="messageInput" placeholder="낙서를 남겨보세요!">
+                <input type="color" id="fontColor" value="#000000">
+                <select id="fontSelect">
+                    <option value="Arial">Arial</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Nanum Pen Script">나눔손글씨</option>
+                    <option value="BM DOHYEON">배달의민족 도현</option>
+                    <option value="BM JUA">배달의민족 주아</option>
+                    <option value="BM HANNA 11yrs">배달의민족 한나체</option>
+                    <option value="Cafe24 Surround">카페24 써라운드</option>
+                </select>
+                <input type="number" id="fontSize" placeholder="크기" min="12" max="48" value="16">
+                <button onclick="startRecording()">녹음 시작</button>
+                <button onclick="stopRecording()" id="stopButton" disabled>녹음 중지</button>
+                <button onclick="sendMessage()">전송</button>
+                <!-- 파일 업로드 추가 -->
+                <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="margin-left: 5px;">
+            </div>
+        </div>
+        
+        <!-- 공지사항 컨테이너 -->
+        <div class="notice-container" id="noticeContainer">
+            <div class="notice-list" id="noticeList"></div>
+            <div class="notice-controls">
+                <button id="newNoticeBtn" onclick="showNoticeForm()">새 공지사항</button>
+                <button id="refreshNoticeBtn" onclick="loadNotices()">새로고침</button>
+            </div>
+            <div class="notice-form" id="noticeForm">
+                <input type="text" id="noticeTitle" placeholder="제목">
+                <textarea id="noticeContent" placeholder="내용"></textarea>
+                <!-- 공지사항 파일 업로드 추가 -->
+                <div>
+                    <label for="noticeFileInput">파일 첨부:</label>
+                    <input type="file" id="noticeFileInput" accept="image/*,application/pdf" multiple>
+                </div>
+                <div>
+                    <button onclick="saveNotice()">저장</button>
+                    <button onclick="cancelNotice()">취소</button>
+                </div>
+            </div>
         </div>
     </div>
+    
     <script>
         let mediaRecorder;
         let audioChunks = [];
+        
+        // 탭 전환 함수
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => {
+                if (t.textContent === (tab === 'chat' ? '채팅' : '공지사항')) {
+                    t.classList.add('active');
+                }
+            });
+            
+            document.getElementById('chatContainer').classList.remove('active');
+            document.getElementById('noticeContainer').classList.remove('active');
+            
+            if (tab === 'chat') {
+                document.getElementById('chatContainer').classList.add('active');
+            } else {
+                document.getElementById('noticeContainer').classList.add('active');
+                loadNotices(); // 공지사항 탭으로 전환할 때 공지사항 로드
+            }
+        }
 
         function loadMessages() {
             const messages = JSON.parse(localStorage.getItem("messages")) || [];
@@ -267,6 +482,97 @@
             messageElement.appendChild(buttonContainer);
             chatBox.appendChild(messageElement);
         }
+        
+        // 공지사항 관련 함수들
+        function loadNotices() {
+            const notices = JSON.parse(localStorage.getItem("notices")) || [];
+            const noticeList = document.getElementById("noticeList");
+            noticeList.innerHTML = "";
+            
+            if (notices.length === 0) {
+                noticeList.innerHTML = "<div class='notice-item'>등록된 공지사항이 없습니다.</div>";
+                return;
+            }
+            
+            notices.forEach((notice, index) => {
+                const noticeItem = document.createElement("div");
+                noticeItem.className = "notice-item";
+                
+                let attachmentsHTML = '';
+                if (notice.attachments && notice.attachments.length > 0) {
+                    attachmentsHTML = '<div class="notice-attachments">';
+                    notice.attachments.forEach(attachment => {
+                        if (attachment.type.startsWith('image/')) {
+                            attachmentsHTML += `<img src="${attachment.url}" alt="${attachment.name}" class="notice-attachment">`;
+                        } else {
+                            attachmentsHTML += `<a href="${attachment.url}" download="${attachment.name}" class="notice-attachment-link">${attachment.name}</a>`;
+                        }
+                    });
+                    attachmentsHTML += '</div>';
+                }
+                
+                noticeItem.innerHTML = `
+                    <div class="notice-title">${notice.title}</div>
+                    <div class="notice-date">${notice.date}</div>
+                    <div class="notice-content" id="content-${index}">
+                        ${notice.content.replace(/\n/g, '<br>')}
+                        ${attachmentsHTML}
+                    </div>
+                `;
+                
+                noticeItem.querySelector(".notice-title").addEventListener("click", () => {
+                    const content = document.getElementById(`content-${index}`);
+                    content.style.display = content.style.display === "block" ? "none" : "block";
+                });
+                
+                noticeList.appendChild(noticeItem);
+            });
+        }
+        
+        function showNoticeForm() {
+            document.getElementById("noticeForm").style.display = "flex";
+            document.getElementById("newNoticeBtn").style.display = "none";
+        }
+        
+        function cancelNotice() {
+            document.getElementById("noticeForm").style.display = "none";
+            document.getElementById("newNoticeBtn").style.display = "block";
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeContent").value = "";
+            document.getElementById("noticeFileInput").value = "";
+        }
+        
+        function saveNotice() {
+            const title = document.getElementById("noticeTitle").value.trim();
+            const content = document.getElementById("noticeContent").value.trim();
+            const fileInput = document.getElementById("noticeFileInput");
+            
+            if (!title || !content) {
+                alert("제목과 내용을 모두 입력해주세요.");
+                return;
+            }
+            
+            // 첨부파일 처리
+            let attachments = fileInput.files.length > 0 ? Array.from(fileInput.files).map(file => {
+                return { 
+                    name: file.name, 
+                    url: URL.createObjectURL(file), 
+                    type: file.type 
+                };
+            }) : null;
+            
+            const notices = JSON.parse(localStorage.getItem("notices")) || [];
+            notices.unshift({
+                title: title,
+                content: content,
+                date: new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }),
+                attachments: attachments
+            });
+            
+            localStorage.setItem("notices", JSON.stringify(notices));
+            loadNotices();
+            cancelNotice();
+        }
 
         function toggleMode() {
             document.body.classList.toggle("dark-mode");
@@ -286,7 +592,10 @@
             }
         });
 
-        window.onload = loadMessages;
+        window.onload = function() {
+            loadMessages();
+            loadNotices();
+        };
     </script>
 </body>
-</html>
+</html> 
