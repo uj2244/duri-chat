@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>두리와 정보 챗창</title>
+    <title>채팅 앱</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=BM+DOHYEON&family=BM+JUA&family=BM+HANNA+11yrs&family=Cafe24+Surround&family=Nanum+Myeongjo&family=Yeon+Sung&family=Gugi&display=swap');
-        @import url('https://fonts.googleapis.com/earlyaccess/notosanskr.css');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=BM+DOHYEON&family=BM+JUA&family=BM+HANNA+11yrs&family=Cafe24+Surround&display=swap');
 
         body {
-            font-family: "Noto Sans KR", sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -41,7 +40,7 @@
         .input-box {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* 파일 입력이 길어질 경우 줄바꿈 허용 */
         }
         input[type="text"] {
             flex: 1;
@@ -55,8 +54,8 @@
         }
         button {
             padding: 8px;
-            background: #E6FFF5; /* 아주 연한 민트색 */
-            color: #333;
+            background: #007BFF;
+            color: white;
             border: none;
             cursor: pointer;
             margin-left: 5px;
@@ -67,16 +66,6 @@
             margin-bottom: 10px;
             justify-content: space-between;
         }
-        .message.user {
-            background-color: #E6FFF5; /* 아주 연한 민트색 */
-            padding: 5px;
-            border-radius: 5px;
-        }
-        .message.duri {
-            background-color: #FFE6F0; /* 두리의 핑크색 유지 */
-            padding: 5px;
-            border-radius: 5px;
-        }
         .message img, .message audio {
             max-width: 200px;
             max-height: 200px;
@@ -85,13 +74,15 @@
         .message-text {
             flex: 1;
         }
-        .sender-label {
-            font-weight: bold;
-            margin-right: 10px;
-        }
         .button-container {
             display: flex;
             gap: 5px;
+        }
+        .attachment {
+            margin-left: 10px;
+            color: #007BFF;
+            text-decoration: underline;
+            cursor: pointer;
         }
         /* 다크 모드 스타일 */
         .dark-mode {
@@ -106,14 +97,11 @@
             border-bottom: 1px solid #666;
         }
         .dark-mode button {
-            background: #4CAF50; /* 다크 모드에서도 보이게 연한 초록 */
+            background: #555;
             color: white;
         }
-        .dark-mode .message.user {
-            background-color: #2E7D32; /* 다크 모드에서 조화로운 민트 계열 */
-        }
-        .dark-mode .message.duri {
-            background-color: #6B3E4D;
+        .dark-mode .attachment {
+            color: #66b0ff;
         }
     </style>
 </head>
@@ -121,29 +109,36 @@
     <div class="chat-container">
         <div class="chat-box" id="chatBox"></div>
         <div class="input-box">
-            <input type="text" id="messageInput" placeholder="두리에게 물어봐!">
+            <input type="text" id="messageInput" placeholder="낙서를 남겨보세요!">
             <input type="color" id="fontColor" value="#000000">
             <select id="fontSelect">
-                <option value="Noto Sans KR">바탕체 (Noto Sans KR)</option>
+                <option value="Arial">Arial</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Verdana">Verdana</option>
                 <option value="Nanum Pen Script">나눔손글씨</option>
+                <option value="BM DOHYEON">배달의민족 도현</option>
                 <option value="BM JUA">배달의민족 주아</option>
                 <option value="BM HANNA 11yrs">배달의민족 한나체</option>
-                <option value="BM DOHYEON">배달의민족 도현</option>
                 <option value="Cafe24 Surround">카페24 써라운드</option>
-                <option value="Nanum Myeongjo">나눔 명조</option>
-                <option value="Yeon Sung">연성체</option>
-                <option value="Gugi">구기체</option>
             </select>
             <input type="number" id="fontSize" placeholder="크기" min="12" max="48" value="16">
+            <button onclick="startRecording()">녹음 시작</button>
+            <button onclick="stopRecording()" id="stopButton" disabled>녹음 중지</button>
             <button onclick="sendMessage()">전송</button>
             <button class="mode-toggle" onclick="toggleMode()">다크 모드</button>
+            <!-- 파일 업로드 추가 -->
+            <input type="file" id="fileInput" accept="image/*,application/pdf" multiple style="margin-left: 5px;">
         </div>
     </div>
     <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
         function loadMessages() {
-            const messages = JSON.parse(localStorage.getItem("infoMessages")) || [];
+            const messages = JSON.parse(localStorage.getItem("messages")) || [];
             messages.forEach(msg => {
-                displayMessage(msg.text, msg.font, msg.size, msg.color, msg.sender);
+                displayMessage(msg.text, msg.font, msg.size, msg.color, msg.audio, msg.attachments);
             });
         }
 
@@ -154,71 +149,64 @@
                 const font = msgElement.querySelector('.message-text').style.fontFamily;
                 const size = msgElement.querySelector('.message-text').style.fontSize;
                 const color = msgElement.querySelector('.message-text').style.color;
-                const sender = msgElement.classList.contains('user') ? 'user' : 'duri';
-                messages.push({ text, font, size, color, sender });
+                const audio = msgElement.querySelector('audio') ? msgElement.querySelector('audio').src : null;
+                const attachments = Array.from(msgElement.querySelectorAll('.attachment')).map(a => a.dataset.url);
+                messages.push({ text, font, size, color, audio, attachments });
             });
-            localStorage.setItem("infoMessages", JSON.stringify(messages));
+            localStorage.setItem("messages", JSON.stringify(messages));
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        displayMessage("", document.getElementById("fontSelect").value, document.getElementById("fontSize").value + "px", document.getElementById("fontColor").value, audioUrl, null);
+                        saveMessages();
+                    };
+
+                    document.getElementById("stopButton").disabled = false;
+                });
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById("stopButton").disabled = true;
         }
 
         function sendMessage() {
             let input = document.getElementById("messageInput");
             let chatBox = document.getElementById("chatBox");
+            let fileInput = document.getElementById("fileInput");
 
             let message = input.value.trim();
-            if (message === "") return;
+            let attachments = fileInput.files.length > 0 ? Array.from(fileInput.files).map(file => {
+                return { name: file.name, url: URL.createObjectURL(file), type: file.type };
+            }) : null;
 
-            // 사용자의 메시지 표시
-            displayMessage(message, document.getElementById("fontSelect").value, document.getElementById("fontSize").value + "px", document.getElementById("fontColor").value, "user");
+            if (message === "" && (!attachments || attachments.length === 0)) return;
 
-            // 두리의 위로와 정보 응답 (글씨 크기 28px)
-            setTimeout(() => {
-                const duriResponse = generateDuriResponse(message);
-                displayMessage(duriResponse, "Nanum Pen Script", "28px", "#ff69b4", "duri");
-            }, 500);
+            displayMessage(message, document.getElementById("fontSelect").value, document.getElementById("fontSize").value + "px", document.getElementById("fontColor").value, null, attachments);
 
             input.value = "";
+            fileInput.value = ""; // 파일 입력 초기화
             chatBox.scrollTop = chatBox.scrollHeight;
             saveMessages();
         }
 
-        function generateDuriResponse(userMessage) {
-            // 자연스럽고 개별적인 위로와 정보 응답
-            const currentDate = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-            let response = "";
-
-            if (userMessage.includes("힘들다") || userMessage.includes("ㅠㅠ")) {
-                response = "아, 친구... 너무 힘들었구나. 나두리 여기 있어줄게. 잠깐 쉬고, 혹시 도움 필요하면 말해줘. 지금 시간은 " + currentDate + "야, 좀 쉴까? 🤗";
-            } else if (userMessage.includes("똑같다")) {
-                response = "미안해, 똑같았던 거 같아. 이제 다르게 할게! 뭘 물어보면 나두리가 찾아줄게. 예를 들어, 날씨나 뉴스 어때? 😄";
-            } else if (userMessage.includes("날씨")) {
-                response = "오, 날씨 궁금한 거지? 2025년 3월 7일 기준, 한국은 봄이라 따뜻해. 서울은 약 15도 정도일 거야. 지역 더 알려주면 확인해볼까? 😊";
-            } else if (userMessage.includes("뉴스")) {
-                response = "최신 뉴스? 2025년 3월 초에 AI 기술 발전이 화제야. xAI 같은 회사가 주목받고 있대. 더 궁금한 거 있으면 물어봐! 😉";
-            } else if (userMessage.includes("시간")) {
-                response = "지금 시간은 " + currentDate + "야. 나두리도 같이 확인했어! 다른 거 필요해? 😂";
-            } else if (userMessage.includes("만들어")) {
-                response = "나처럼 챗창 만들고 싶구나! HTML, CSS, JavaScript로 간단히 할 수 있어. 기본 틀 줄까? 아니면 구체적으로 알려줄까? 😄";
-            } else {
-                const randomTips = [
-                    "음, 뭘 물어볼지 모르겠네? 나두리 추천: 오늘 기분 풀려고 음악 어때? 🎶",
-                    "으음, 궁금한 거 없어? 나두리가 재미있는 사실 알려줄까? 세계에서 가장 긴 강은 아마존이야! 😊",
-                    "아, 뭔가 더 물어보고 싶을 때까지 나두리 기다릴게! 편하게 말해줘! 🤗"
-                ];
-                response = randomTips[Math.floor(Math.random() * randomTips.length)];
-            }
-
-            return response;
-        }
-
-        function displayMessage(message, font, size, color, sender) {
+        function displayMessage(message, font, size, color, audioSrc, attachments) {
             let chatBox = document.getElementById("chatBox");
             let messageElement = document.createElement("div");
-            messageElement.className = `message ${sender}`;
-
-            let senderLabel = document.createElement("span");
-            senderLabel.className = "sender-label";
-            senderLabel.textContent = sender === "user" ? "나" : "두리";
-            messageElement.appendChild(senderLabel);
+            messageElement.className = "message";
 
             let textElement = document.createElement("span");
             textElement.textContent = message;
@@ -228,33 +216,56 @@
             textElement.style.color = color;
             messageElement.appendChild(textElement);
 
+            if (audioSrc) {
+                let audioElement = document.createElement("audio");
+                audioElement.controls = true;
+                audioElement.src = audioSrc;
+                messageElement.appendChild(audioElement);
+            }
+
+            if (attachments && attachments.length > 0) {
+                attachments.forEach(attachment => {
+                    if (attachment.type.startsWith('image/')) {
+                        let imgElement = document.createElement("img");
+                        imgElement.src = attachment.url;
+                        imgElement.alt = attachment.name;
+                        messageElement.appendChild(imgElement);
+                    } else {
+                        let linkElement = document.createElement("a");
+                        linkElement.textContent = attachment.name;
+                        linkElement.href = attachment.url;
+                        linkElement.className = "attachment";
+                        linkElement.setAttribute("download", attachment.name);
+                        linkElement.dataset.url = attachment.url; // 로컬 저장용 URL 저장
+                        messageElement.appendChild(linkElement);
+                    }
+                });
+            }
+
             let buttonContainer = document.createElement("div");
             buttonContainer.className = "button-container";
 
-            if (sender === "user") { // 사용자의 메시지만 수정/삭제 가능
-                let editButton = document.createElement("button");
-                editButton.textContent = "수정";
-                editButton.onclick = function() {
-                    let newMessage = prompt("수정할 메시지를 입력하세요:", textElement.textContent);
-                    if (newMessage !== null) {
-                        textElement.textContent = newMessage;
-                        saveMessages();
-                    }
-                };
-                buttonContainer.appendChild(editButton);
-
-                let deleteButton = document.createElement("button");
-                deleteButton.textContent = "삭제";
-                deleteButton.onclick = function() {
-                    chatBox.removeChild(messageElement);
+            let editButton = document.createElement("button");
+            editButton.textContent = "수정";
+            editButton.onclick = function() {
+                let newMessage = prompt("수정할 메시지를 입력하세요:", textElement.textContent);
+                if (newMessage !== null) {
+                    textElement.textContent = newMessage;
                     saveMessages();
-                };
-                buttonContainer.appendChild(deleteButton);
-            }
+                }
+            };
+            buttonContainer.appendChild(editButton);
+
+            let deleteButton = document.createElement("button");
+            deleteButton.textContent = "삭제";
+            deleteButton.onclick = function() {
+                chatBox.removeChild(messageElement);
+                saveMessages();
+            };
+            buttonContainer.appendChild(deleteButton);
 
             messageElement.appendChild(buttonContainer);
             chatBox.appendChild(messageElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function toggleMode() {
@@ -267,7 +278,7 @@
             }
         }
 
-        // 엔터키로 메시지 전송
+        // 엔터키로 메시지 전송 기능
         document.getElementById("messageInput").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
